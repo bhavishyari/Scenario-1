@@ -1,0 +1,129 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: The template used to create an ECS Service from the ECS Console.
+Parameters:
+  ECSClusterName:
+    Type: String
+    Default: test-ecs-takeaway
+  SecurityGroupIDs:
+    Type: CommaDelimitedList
+    Default: 'sg-0b728f6fc3efafc77'
+  SubnetIDs:
+    Type: CommaDelimitedList
+    Default: 'subnet-00611c4729cbc9dd2,subnet-0fd8986d803a91d8a'
+  VpcID:
+    Type: String
+    Default: vpc-051a59703f1c96c25
+  LoadBalancerName:
+    Type: String
+    Default: alb-takeaway
+Resources:
+  ECSService:
+    Type: 'AWS::ECS::Service'
+    Properties:
+      Cluster: ec2
+      TaskDefinition: 'arn:aws:ecs:us-west-1:920048411410:task-definition/nonprod-ecs:1'
+      LaunchType: EC2
+      ServiceName: takeaway-jenkins
+      SchedulingStrategy: REPLICA
+      DesiredCount: 1
+      LoadBalancers:
+        - ContainerName: jenkins
+          ContainerPort: 8080
+          LoadBalancerName: !Ref 'AWS::NoValue'
+          TargetGroupArn: !Ref TargetGroup
+      NetworkConfiguration:
+        AwsvpcConfiguration:
+          SecurityGroups: !Ref SecurityGroupIDs
+          Subnets: !Ref SubnetIDs
+      DeploymentConfiguration:
+        MaximumPercent: 200
+        MinimumHealthyPercent: 100
+        DeploymentCircuitBreaker:
+          Enable: true
+          Rollback: true
+      DeploymentController:
+        Type: ECS
+      ServiceConnectConfiguration:
+        Enabled: false
+      PlacementStrategies:
+        - Field: 'attribute:ecs.availability-zone'
+          Type: spread
+        - Field: instanceId
+          Type: spread
+      PlacementConstraints: []
+      Tags: []
+      EnableECSManagedTags: true
+    DependsOn:
+      - Listener
+  LoadBalancer:
+    Type: 'AWS::ElasticLoadBalancingV2::LoadBalancer'
+    Properties:
+      Type: application
+      Name: takeaway-jenkins
+      SecurityGroups: !Ref SecurityGroupIDs
+      Subnets: !Ref SubnetIDs
+  TargetGroup:
+    Type: 'AWS::ElasticLoadBalancingV2::TargetGroup'
+    Properties:
+      HealthCheckPath: /
+      Name: jenkins-tg
+      Port: 80
+      Protocol: HTTP
+      TargetType: ip
+      HealthCheckProtocol: HTTP
+      VpcId: !Ref VpcID
+  Listener:
+    Type: 'AWS::ElasticLoadBalancingV2::Listener'
+    Properties:
+      DefaultActions:
+        - Type: forward
+          TargetGroupArn: !Ref TargetGroup
+      LoadBalancerArn: !Ref LoadBalancer
+      Port: 80
+      Protocol: HTTP
+  AutoScalingTarget:
+    Type: 'AWS::ApplicationAutoScaling::ScalableTarget'
+    Properties:
+      MaxCapacity: '2'
+      MinCapacity: '1'
+      ResourceId: service/ec2/jenkins
+      RoleARN: >-
+        arn:aws:iam::920048411410:role/aws-service-role/ecs.application-autoscaling.amazonaws.com/AWSServiceRoleForApplicationAutoScaling_ECSService
+      ScalableDimension: 'ecs:service:DesiredCount'
+      ServiceNamespace: test-ecs-takeaway
+    DependsOn:
+      - ECSService
+  AutoScalingPolicy:
+    Type: 'AWS::ApplicationAutoScaling::ScalingPolicy'
+    Properties:
+      PolicyName: jenkins-asg
+      PolicyType: TargetTrackingScaling
+      ResourceId: service/ec2/jenkins
+      ScalingTargetId: !Ref AutoScalingTarget
+      TargetTrackingScalingPolicyConfiguration:
+        DisableScaleIn: false
+        ScaleInCooldown: '200'
+        ScaleOutCooldown: '300'
+        TargetValue: '70'
+        PredefinedMetricSpecification:
+          PredefinedMetricType: ECSServiceAverageCPUUtilization
+Outputs:
+  ClusterName:
+    Description: The cluster used to create the service.
+    Value: !Ref ECSClusterName
+  ECSService:
+    Description: The created service.
+    Value: !Ref ECSService
+  LoadBalancer:
+    Description: The created load balancer.
+    Value: !Ref LoadBalancer
+  Listener:
+    Description: The created listener.
+    Value: !Ref Listener
+  TargetGroup:
+    Description: The created target group.
+    Value: !Ref TargetGroup
+  AutoScalingTarget:
+    Value: !Ref AutoScalingTarget
+  AutoScalingPolicy:
+    Value: !Ref AutoScalingPolicy
