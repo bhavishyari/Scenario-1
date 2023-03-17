@@ -27,7 +27,7 @@ Step 3:
 
 3) Create a Service in cluster. This will launch a task with jenkins task definition.
 
-CMD: aws cloudformation create-stack --stack-name test-ecs-takeaway --template-body file://ECS-Service-takeaway.yaml --region 'REGION-NAME' --capabilities CAPABILITY_IAM
+CMD: aws cloudformation create-stack --stack-name ECS-Service-takeaway --template-body file://ECS-Service-takeaway.yaml --region 'REGION-NAME' --capabilities CAPABILITY_IAM
 
 
-Note: In ECS-cluster.yaml file you need to update the values of default with vpcID, GroupSubnetID, SubnetID with the above stack resource values.
+Note: In ECS-Service-takeaway.yaml file you need to update the values of default with vpcID, GroupSubnetID, SubnetID with the above stack resource values.
