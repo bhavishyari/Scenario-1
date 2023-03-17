@@ -1,0 +1,59 @@
+{
+    "taskDefinitionArn": "arn:aws:ecs:us-west-1:920048411410:task-definition/jenkins-takeaway-td:1",
+    "containerDefinitions": [
+        {
+            "name": "jenkins",
+            "image": "jenkins/jenkins",
+            "cpu": 0,
+            "portMappings": [
+                {
+                    "name": "jenkins-8080-tcp",
+                    "containerPort": 8080,
+                    "hostPort": 8080,
+                    "protocol": "tcp",
+                    "appProtocol": "http"
+                }
+            ],
+            "essential": true,
+            "environment": [],
+            "environmentFiles": [],
+            "mountPoints": [],
+            "volumesFrom": []
+        }
+    ],
+    "family": "jenkins-takeaway-td",
+    "taskRoleArn": "arn:aws:iam::920048411410:role/ecsTaskExecutionRole",
+    "executionRoleArn": "arn:aws:iam::920048411410:role/ecsTaskExecutionRole",
+    "networkMode": "awsvpc",
+    "revision": 1,
+    "volumes": [],
+    "status": "ACTIVE",
+    "requiresAttributes": [
+        {
+            "name": "com.amazonaws.ecs.capability.task-iam-role"
+        },
+        {
+            "name": "com.amazonaws.ecs.capability.docker-remote-api.1.18"
+        },
+        {
+            "name": "ecs.capability.task-eni"
+        }
+    ],
+    "placementConstraints": [],
+    "compatibilities": [
+        "EC2",
+        "FARGATE"
+    ],
+    "requiresCompatibilities": [
+        "EC2"
+    ],
+    "cpu": "1024",
+    "memory": "2048",
+    "runtimePlatform": {
+        "cpuArchitecture": "X86_64",
+        "operatingSystemFamily": "LINUX"
+    },
+    "registeredAt": "2023-03-17T16:33:29.424Z",
+    "registeredBy": "arn:aws:iam::920048411410:user/devops",
+    "tags": []
+}
